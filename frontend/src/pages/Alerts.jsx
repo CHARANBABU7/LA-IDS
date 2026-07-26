@@ -24,11 +24,12 @@ export default function Alerts() {
       .catch(() => setError("Could not reach the backend."))
       .finally(() => setLoading(false));
   };
-
-  useEffect(() => {
-    fetchAlerts();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [severityFilter, statusFilter]);
+useEffect(() => {
+  fetchAlerts();
+  const interval = setInterval(fetchAlerts, 15000);
+  return () => clearInterval(interval);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [severityFilter, statusFilter]);
 
   const openAlertDetail = async (alertId) => {
     const detail = await investigateAlert(alertId);
@@ -73,8 +74,8 @@ export default function Alerts() {
       {loading && !error && <p className="text-slate/50 font-mono text-sm">Loading alerts...</p>}
 
       {!loading && !error && (
-        <div className="grid grid-cols-2 gap-3">
-          {alerts.length === 0 && (
+<div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {alerts.length === 0 && (
             <p className="text-slate/40 font-mono text-sm col-span-2 text-center py-8">No alerts match your filters.</p>
           )}
           {alerts.map((alert) => (

@@ -13,7 +13,8 @@ from app.services import apache_parser
 from app.services.upload_tracking_service import compute_file_hash, is_duplicate_upload, record_upload
 from fastapi.responses import StreamingResponse
 from app.services.export_service import export_logs_to_csv
-
+from app.services.detection_runner import run_detection_cycle
+from app.schemas import DetectionRunResponse
 
 router = APIRouter(prefix="/logs", tags=["Logs"])
 
@@ -31,32 +32,42 @@ async def upload_log_file(
     log_type: LogType = Form(LogType.LINUX_AUTH),
     db: Session = Depends(get_db),
 ):
-    """
-    Accept a raw log file, parse it using the parser matching log_type,
-    and persist every line. Rejects exact re-uploads of the same file
-    content to prevent duplicate log entries and inflated detection counts.
-    """
     raw_bytes = await file.read()
     file_hash = compute_file_hash(raw_bytes)
 
     if is_duplicate_upload(db, file_hash):
-        raise HTTPException(
-            status_code=409,
-            detail=f"This exact file ('{file.filename}') has already been uploaded. "
-                   "Duplicate uploads are rejected to prevent inflated log/alert counts.",
-        )
+        raise HTTPException(status_code=409, detail=f"This exact file ('{file.filename}') has already been uploaded.")
 
     content = raw_bytes.decode("utf-8", errors="replace")
     parser_fn = PARSERS[log_type]
     parsed_lines = parser_fn(content)
+
+    non_empty_lines = [l for l in parsed_lines if l["message"] != "empty line"]
+    parsed_count = sum(1 for l in parsed_lines if l["parsed"])
+
+    # If nothing at all parsed out of a non-trivial file, this is almost
+    # certainly the wrong log_type selected — reject before writing
+    # anything to the DB, so the file can be retried with the correct type.
+    if len(non_empty_lines) >= 3 and parsed_count == 0:
+        raise HTTPException(
+            status_code=422,
+            detail=(
+                f"None of the {len(non_empty_lines)} lines in '{file.filename}' matched the "
+                f"'{log_type.value}' format. This usually means the wrong log type was selected — "
+                "please check the format and try again."
+            ),
+        )
+
     summary = save_parsed_logs(db, parsed_lines)
     record_upload(db, file_hash, file.filename)
+    detection_result = run_detection_cycle(db) if summary["parsed_count"] > 0 else None
 
     return LogUploadResponse(
         filename=file.filename,
         total_lines=summary["total_lines"],
         parsed_count=summary["parsed_count"],
         unparsed_count=summary["unparsed_count"],
+        detection=DetectionRunResponse(**detection_result) if detection_result else None,
     )
 @router.get("/", response_model=list[LogResponse])
 def list_logs(

@@ -84,6 +84,7 @@ export default function LogExplorer() {
       )}
 
       {!loading && !error && (
+        <div className="overflow-x-auto">
         <DataTable
           columns={["Timestamp", "Source IP", "Method", "Endpoint / Message", "Status", ""]}
           emptyMessage="No logs match your filters."
@@ -92,8 +93,9 @@ export default function LogExplorer() {
             <Fragment key={log.id}>
               <tr
                 key={log.id}
+            
                 onClick={() => setExpandedId(expandedId === log.id ? null : log.id)}
-                className="hover:bg-panel/40 cursor-pointer transition-colors"
+                className="hover:bg-panel/40 cursor-pointer transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-amber"
               >
                 <td className="px-4 py-3 font-mono text-xs text-slate/60">
                   {log.timestamp ? new Date(log.timestamp).toLocaleString() : "—"}
@@ -112,9 +114,20 @@ export default function LogExplorer() {
                     <span className="text-slate/30">unparsed</span>
                   )}
                 </td>
-                <td className="px-4 py-3 text-slate/40">
-                  {expandedId === log.id ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                </td>
+                <td className="px-4 py-3 text-right">
+  <button
+    type="button"
+    aria-label={expandedId === log.id ? "Collapse log details" : "Expand log details"}
+    aria-expanded={expandedId === log.id}
+    onClick={(e) => {
+      e.stopPropagation();
+      setExpandedId(expandedId === log.id ? null : log.id);
+    }}
+    className="inline-flex items-center justify-center rounded-md p-1.5 text-slate/50 hover:bg-panel hover:text-amber transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-amber"
+  >
+    {expandedId === log.id ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+  </button>
+</td>
               </tr>
               {expandedId === log.id && (
                 <tr className="bg-void/60">
@@ -127,6 +140,7 @@ export default function LogExplorer() {
 
           ))}
         </DataTable>
+        </div>
       )}
     </div>
   );

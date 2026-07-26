@@ -143,6 +143,15 @@ TRAVERSAL_PATTERNS = re.compile(
     r"(\.\./|\.\.\\|%2e%2e%2f|%2e%2e/|\.\.%2f|/etc/passwd|/etc/shadow|windows/system32)",
     re.IGNORECASE,
 )
+CMD_INJECTION_PATTERNS = re.compile(
+    r"(;\s*\w+|\|\|?\s*\w+|`[^`]+`|\$\(.+\)|&&\s*\w+|\bnc\s+-|\bwget\s+http|\bcurl\s+http)",
+    re.IGNORECASE,
+)
+
+SENSITIVE_FILE_PATTERNS = re.compile(
+    r"(\.env\b|\.git/config|wp-config\.php|id_rsa|\.htpasswd|backup\.sql|\.aws/credentials|docker-compose\.ya?ml)",
+    re.IGNORECASE,
+)
 
 def _detect_web_attack_pattern(
     db: Session,
@@ -212,6 +221,13 @@ def detect_xss(db: Session, since_log_id: int = 0) -> list[DetectedThreat]:
 
 def detect_directory_traversal(db: Session, since_log_id: int = 0) -> list[DetectedThreat]:
     return _detect_web_attack_pattern(db, TRAVERSAL_PATTERNS, "directory_traversal", since_log_id)
+
+def detect_command_injection(db: Session, since_log_id: int = 0) -> list[DetectedThreat]:
+    return _detect_web_attack_pattern(db, CMD_INJECTION_PATTERNS, "command_injection", since_log_id)
+
+
+def detect_sensitive_file_access(db: Session, since_log_id: int = 0) -> list[DetectedThreat]:
+    return _detect_web_attack_pattern(db, SENSITIVE_FILE_PATTERNS, "sensitive_file_access", since_log_id)
 
 
 # def run_all_detectors(db: Session, since_log_id: int = 0) -> list[DetectedThreat]:

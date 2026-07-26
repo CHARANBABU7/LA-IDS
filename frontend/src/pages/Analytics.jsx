@@ -70,7 +70,7 @@ export default function Analytics() {
         <p className="text-sm text-slate/50 mt-1">Trends and breakdowns across all detected activity.</p>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <ChartCard title="Severity Distribution">
           {severityData.length === 0 ? (
             <p className="text-slate/40 font-mono text-sm py-12 text-center">No alerts yet.</p>
@@ -121,7 +121,7 @@ export default function Analytics() {
         )}
       </ChartCard>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <ChartCard title="Top Source IPs">
           <div className="space-y-2">
             {summary.top_attackers.length === 0 && <p className="text-slate/40 text-sm font-mono">No data yet.</p>}

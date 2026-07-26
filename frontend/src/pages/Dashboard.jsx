@@ -9,11 +9,11 @@ export default function Dashboard() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    getDashboardSummary()
-      .then(setData)
-      .catch(() => setError("Could not reach the backend. Is it running on port 8000?"));
-  }, []);
-
+  const load = () => getDashboardSummary().then(setData).catch(() => setError("Could not reach the backend."));
+  load();
+  const interval = setInterval(load, 15000); // refresh every 15s
+  return () => clearInterval(interval);
+}, []);
   if (error) {
     return (
       <div className="text-rust font-mono text-sm border border-rust/30 bg-rust/10 rounded-lg p-4">
@@ -36,15 +36,14 @@ export default function Dashboard() {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <StatCard label="Total Logs" value={data.total_logs} icon={FileText} />
         <StatCard label="Total Alerts" value={data.total_alerts} icon={ShieldAlert} />
         <StatCard label="Open Alerts" value={data.open_alerts} icon={AlertTriangle} accent="rust" />
         <StatCard label="Resolved" value={data.resolved_alerts} icon={ShieldCheck} />
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        {/* Attack Type Breakdown */}
+<div className="grid grid-cols-1 md:grid-cols-2 gap-4">        {/* Attack Type Breakdown */}
         <div className="bg-panel/50 border border-panel rounded-lg p-5">
           <h2 className="font-display text-sm text-bone mb-4">Attack Types</h2>
           <div className="space-y-2">

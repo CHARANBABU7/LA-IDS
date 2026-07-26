@@ -11,9 +11,21 @@ const statusStyles = {
 export default function AlertCard({ alert, onClick }) {
   return (
     <div
-      onClick={onClick}
-      className="bg-panel/50 border border-panel rounded-lg p-4 cursor-pointer hover:border-amber/40 transition-colors"
-    >
+  onClick={onClick}
+   tabIndex={0}
+  role="button"
+  onKeyDown={(e) => {
+  if (e.key === "Enter" || e.key === " ") {
+    e.preventDefault();
+    onClick();
+  }
+}}
+className={`bg-panel/50 border rounded-lg p-4 cursor-pointer hover:border-amber/40 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-amber ${
+      alert.severity === "high" && alert.status === "open"
+      ? "border-rust/40 shadow-[0_0_0_1px_rgba(193,68,14,0.15)]"
+      : "border-panel"
+  }`}
+>
       <div className="flex items-start justify-between mb-3">
         <div>
           <p className="font-display text-sm text-bone">{alert.attack_type.replace(/_/g, " ")}</p>
@@ -26,6 +38,8 @@ export default function AlertCard({ alert, onClick }) {
         <span className="flex items-center gap-1"><Clock size={12} /> {new Date(alert.timestamp).toLocaleString()}</span>
         <span className={`ml-auto uppercase ${statusStyles[alert.status] || ""}`}>{alert.status.replace(/_/g, " ")}</span>
       </div>
+      
     </div>
+    
   );
 }

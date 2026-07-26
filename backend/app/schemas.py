@@ -9,23 +9,25 @@ class ORMBase(BaseModel):
     class Config:
         from_attributes = True
 
-class LogUploadResponse(ORMBase):
-    """
-    Normalized response returned after a log file upload.
-    Gives the analyst immediate visibility into parse quality —
-    a low parsed_count relative to total_lines usually means
-    the wrong parser was used for this log format.
-    """
-    filename: str
-    total_lines: int
-    parsed_count: int
-    unparsed_count: int
 
 class DetectionRunResponse(ORMBase):
     """Normalized summary of a detection run — no raw Alert rows dumped."""
     threats_found: int
     alerts_created: int
     duplicates_skipped: int
+
+class LogUploadResponse(ORMBase):
+    """
+    Normalized response after upload. Now includes the automatic
+    detection cycle's results, since upload always triggers detection —
+    one call does the whole pipeline: parse, store, detect, alert.
+    """
+    filename: str
+    total_lines: int
+    parsed_count: int
+    unparsed_count: int
+    detection: DetectionRunResponse | None = None
+
 
 
 class LogResponse(ORMBase):
