@@ -22,3 +22,5 @@ Thumbs.db
 
 # Logs
 *.log
+# Local database
+backend/la_ids.db
